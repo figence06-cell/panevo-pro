@@ -168,62 +168,65 @@ export const AddProductForm = () => {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="shelf_price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Raf Fiyatı (₺)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="selling_price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Satış Fiyatı (₺)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={form.control}
-                name="stock_quantity"
+                name="shelf_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stok Miktarı</FormLabel>
+                    <FormLabel>Raf Fiyatı (₺)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
-                        placeholder="0" 
-                        {...field} 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="selling_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Satış Fiyatı (₺)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
+
+            <FormField
+              control={form.control}
+              name="stock_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stok Miktarı</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? 'Ekleniyor...' : 'Ürün Ekle'}
