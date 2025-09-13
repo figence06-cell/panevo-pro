@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AddProductForm } from "@/components/supplier/AddProductForm";
 import { ProductsPage } from "@/components/supplier/ProductsPage";
+import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -32,10 +33,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin/suppliers" element={
               <DashboardLayout>
-                <div className="text-center p-8">
-                  <h2 className="text-2xl font-bold mb-4">Tedarikçi Yönetimi</h2>
-                  <p className="text-muted-foreground">Bu özellik yakında eklenecek...</p>
-                </div>
+                <SuppliersManagementPage />
               </DashboardLayout>
             } />
             <Route path="/admin/customers" element={
