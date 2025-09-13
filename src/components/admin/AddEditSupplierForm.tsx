@@ -17,15 +17,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const supplierSchema = z.object({
+const supplierSchemaBase = z.object({
   supplier_name: z.string().min(1, 'Tedarikçi adı gereklidir'),
   phone: z.string().min(1, 'Telefon numarası gereklidir'),
-  email: z.string().email('Geçerli bir e-posta adresi girin').optional().or(z.literal('')),
+  email: z.string().email('Geçerli bir e-posta adresi girin').min(1, 'E-posta adresi gereklidir'),
   tabdk_no: z.string().min(1, 'TABDK numarası gereklidir'),
   address: z.string().optional(),
 });
 
-type SupplierFormValues = z.infer<typeof supplierSchema>;
+const supplierSchemaNew = supplierSchemaBase.extend({
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Şifreler eşleşmiyor",
+  path: ["confirmPassword"],
+});
+
+const supplierSchemaEdit = supplierSchemaBase;
+
+type SupplierFormValuesNew = z.infer<typeof supplierSchemaNew>;
+type SupplierFormValuesEdit = z.infer<typeof supplierSchemaEdit>;
+type SupplierFormValues = SupplierFormValuesNew | SupplierFormValuesEdit;
 
 interface Supplier {
   id: string;
@@ -53,13 +65,14 @@ export const AddEditSupplierForm: React.FC<AddEditSupplierFormProps> = ({
   const isEditing = !!supplier;
 
   const form = useForm<SupplierFormValues>({
-    resolver: zodResolver(supplierSchema),
+    resolver: zodResolver(isEditing ? supplierSchemaEdit : supplierSchemaNew),
     defaultValues: {
       supplier_name: '',
       phone: '',
       email: '',
       tabdk_no: '',
       address: '',
+      ...(isEditing ? {} : { password: '', confirmPassword: '' }),
     },
   });
 
@@ -79,15 +92,16 @@ export const AddEditSupplierForm: React.FC<AddEditSupplierFormProps> = ({
     try {
       setLoading(true);
 
-      const supplierData = {
-        supplier_name: values.supplier_name,
-        phone: values.phone,
-        email: values.email || null,
-        tabdk_no: values.tabdk_no,
-        address: values.address || null,
-      };
-
       if (isEditing) {
+        // Update existing supplier
+        const supplierData = {
+          supplier_name: values.supplier_name,
+          phone: values.phone,
+          email: values.email,
+          tabdk_no: values.tabdk_no,
+          address: values.address || null,
+        };
+
         const { error } = await supabase
           .from('suppliers')
           .update({
@@ -103,15 +117,41 @@ export const AddEditSupplierForm: React.FC<AddEditSupplierFormProps> = ({
           description: 'Tedarikçi bilgileri güncellendi.',
         });
       } else {
-        const { error } = await supabase
-          .from('suppliers')
-          .insert([supplierData]);
+        // Create new supplier with user account
+        const { password, confirmPassword, ...supplierData } = values as SupplierFormValuesNew;
 
-        if (error) throw error;
+        // First create the user account
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: supplierData.email,
+          password: password,
+          options: {
+            data: {
+              full_name: supplierData.supplier_name,
+              role: 'supplier'
+            }
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('Kullanıcı oluşturulamadı');
+
+        // Create the supplier record with user_id
+        const { error: supplierError } = await supabase
+          .from('suppliers')
+          .insert([{
+            supplier_name: supplierData.supplier_name,
+            phone: supplierData.phone,
+            email: supplierData.email,
+            tabdk_no: supplierData.tabdk_no,
+            address: supplierData.address || null,
+            user_id: authData.user.id,
+          }]);
+
+        if (supplierError) throw supplierError;
 
         toast({
           title: 'Başarılı',
-          description: 'Yeni tedarikçi eklendi.',
+          description: 'Yeni tedarikçi ve kullanıcı hesabı oluşturuldu.',
         });
       }
 
@@ -122,7 +162,7 @@ export const AddEditSupplierForm: React.FC<AddEditSupplierFormProps> = ({
         title: 'Hata',
         description: isEditing 
           ? 'Tedarikçi güncellenirken bir hata oluştu.'
-          : 'Tedarikçi eklenirken bir hata oluştu.',
+          : 'Tedarikçi oluşturulurken bir hata oluştu.',
         variant: 'destructive',
       });
     } finally {
@@ -205,6 +245,46 @@ export const AddEditSupplierForm: React.FC<AddEditSupplierFormProps> = ({
             )}
           />
         </div>
+
+        {!isEditing && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Şifre *</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password"
+                      placeholder="Şifre girin"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Şifre Tekrar *</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password"
+                      placeholder="Şifreyi tekrar girin"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
