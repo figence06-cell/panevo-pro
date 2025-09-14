@@ -8,6 +8,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AddProductForm } from "@/components/supplier/AddProductForm";
 import { ProductsPage } from "@/components/supplier/ProductsPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
+import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -68,10 +69,7 @@ const App = () => (
             {/* Customer Routes */}
             <Route path="/customer/products" element={
               <DashboardLayout>
-                <div className="text-center p-8">
-                  <h2 className="text-2xl font-bold mb-4">Ürünler</h2>
-                  <p className="text-muted-foreground">Bu özellik yakında eklenecek...</p>
-                </div>
+                <CustomerProductsPage />
               </DashboardLayout>
             } />
             
