@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Package, Upload } from 'lucide-react';
+import { Package, Upload, X, Image } from 'lucide-react';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Ürün adı gereklidir'),
@@ -31,7 +31,10 @@ interface Category {
 export const AddProductForm = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [supplierData, setSupplierData] = useState<any>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -73,6 +76,56 @@ export const AddProductForm = () => {
     fetchData();
   }, [user]);
 
+  const handleImageUpload = async (files: File[]) => {
+    setUploading(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      setImageUrls(prev => [...prev, ...uploadedUrls]);
+      toast({
+        title: 'Başarılı',
+        description: `${files.length} resim yüklendi`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Hata',
+        description: error.message || 'Resim yüklenirken hata oluştu',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setSelectedImages(prev => [...prev, ...files]);
+      handleImageUpload(files);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     if (!supplierData) {
       toast({
@@ -95,6 +148,7 @@ export const AddProductForm = () => {
           selling_price: data.selling_price,
           stock_quantity: data.stock_quantity,
           supplier_id: supplierData.id,
+          images: imageUrls,
         });
 
       if (error) throw error;
@@ -105,6 +159,8 @@ export const AddProductForm = () => {
       });
 
       form.reset();
+      setImageUrls([]);
+      setSelectedImages([]);
     } catch (error: any) {
       toast({
         title: 'Hata',
@@ -227,6 +283,67 @@ export const AddProductForm = () => {
                 </FormItem>
               )}
             />
+
+            {/* Image Upload Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                <span className="text-sm font-medium">Ürün Resimleri</span>
+              </div>
+              
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                <div className="text-center">
+                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <div className="mt-2">
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <span className="text-sm text-primary hover:underline">
+                        Resim yüklemek için tıklayın
+                      </span>
+                      <input
+                        id="image-upload"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG, WEBP (Maks. 10MB)
+                  </p>
+                </div>
+              </div>
+
+              {/* Image Preview */}
+              {imageUrls.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Ürün resmi ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {uploading && (
+                <div className="text-center text-sm text-muted-foreground">
+                  Resimler yükleniyor...
+                </div>
+              )}
+            </div>
 
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? 'Ekleniyor...' : 'Ürün Ekle'}
