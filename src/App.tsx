@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AddProductForm } from "@/components/supplier/AddProductForm";
 import { ProductsPage } from "@/components/supplier/ProductsPage";
+import { SupplierOrdersPage } from "@/components/supplier/SupplierOrdersPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
 import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
 import Index from "./pages/Index";
@@ -63,6 +64,11 @@ const App = () => (
             <Route path="/supplier/add-product" element={
               <DashboardLayout>
                 <AddProductForm />
+              </DashboardLayout>
+            } />
+            <Route path="/supplier/orders" element={
+              <DashboardLayout>
+                <SupplierOrdersPage />
               </DashboardLayout>
             } />
             
