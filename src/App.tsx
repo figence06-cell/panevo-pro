@@ -11,6 +11,7 @@ import { SupplierOrdersPage } from "@/components/supplier/SupplierOrdersPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
 import { CategoriesManagementPage } from "@/components/admin/CategoriesManagementPage";
 import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
+import { CustomerOrdersPage } from "@/components/customer/CustomerOrdersPage";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -82,6 +83,11 @@ const App = () => (
             <Route path="/customer/products" element={
               <DashboardLayout>
                 <CustomerProductsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/customer/orders" element={
+              <DashboardLayout>
+                <CustomerOrdersPage />
               </DashboardLayout>
             } />
             
