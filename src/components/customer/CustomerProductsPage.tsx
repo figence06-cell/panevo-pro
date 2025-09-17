@@ -10,6 +10,7 @@ interface Category {
   id: string;
   name: string;
   description?: string;
+  image_url?: string;
 }
 
 interface Product {
@@ -39,7 +40,7 @@ export const CustomerProductsPage = () => {
     try {
       const { data, error } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, description, image_url")
         .order("name");
 
       if (error) throw error;
@@ -97,8 +98,18 @@ export const CustomerProductsPage = () => {
     setFavorites(newFavorites);
   };
 
-  const getCategoryImage = (categoryName: string) => {
-    // Placeholder images for categories - in production, these would come from the database
+  const getCategoryDisplay = (category: Category) => {
+    if (category.image_url) {
+      return (
+        <img 
+          src={category.image_url} 
+          alt={category.name}
+          className="w-12 h-12 object-cover rounded-full"
+        />
+      );
+    }
+    
+    // Fallback emojis for categories without images
     const categoryImages: Record<string, string> = {
       "Sebzeler": "🥬",
       "Meyveler": "🍎",
@@ -107,7 +118,12 @@ export const CustomerProductsPage = () => {
       "Tahıllar": "🌾",
       "İçecekler": "🥤",
     };
-    return categoryImages[categoryName] || "🛒";
+    
+    return (
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl">
+        {categoryImages[category.name] || "🛒"}
+      </div>
+    );
   };
 
   if (loading) {
@@ -149,12 +165,12 @@ export const CustomerProductsPage = () => {
                 selectedCategory === category.id ? null : category.id
               )}
             >
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 transition-colors ${
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 transition-colors overflow-hidden ${
                 selectedCategory === category.id
                   ? "border-primary bg-primary/10"
                   : "border-border bg-card hover:border-primary/50"
               }`}>
-                {getCategoryImage(category.name)}
+                {getCategoryDisplay(category)}
               </div>
               <span className={`text-sm font-medium text-center ${
                 selectedCategory === category.id ? "text-primary" : "text-foreground"

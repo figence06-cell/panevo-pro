@@ -22,6 +22,7 @@ import {
   Grid3X3,
   List,
   TrendingUp,
+  FolderOpen,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,6 +42,7 @@ export const AppSidebar: React.FC = () => {
         return [
           ...baseItems,
           { title: 'Tedarikçi Yönetimi', url: '/admin/suppliers', icon: Users },
+          { title: 'Kategori Yönetimi', url: '/admin/categories', icon: FolderOpen },
           { title: 'Müşteri Yönetimi', url: '/admin/customers', icon: UserPlus },
           { title: 'Sipariş Yönetimi', url: '/admin/orders', icon: ShoppingCart },
           { title: 'Sipariş Geçmişi', url: '/admin/order-history', icon: History },

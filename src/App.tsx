@@ -9,6 +9,7 @@ import { AddProductForm } from "@/components/supplier/AddProductForm";
 import { ProductsPage } from "@/components/supplier/ProductsPage";
 import { SupplierOrdersPage } from "@/components/supplier/SupplierOrdersPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
+import { CategoriesManagementPage } from "@/components/admin/CategoriesManagementPage";
 import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
@@ -36,6 +37,11 @@ const App = () => (
             <Route path="/admin/suppliers" element={
               <DashboardLayout>
                 <SuppliersManagementPage />
+              </DashboardLayout>
+            } />
+            <Route path="/admin/categories" element={
+              <DashboardLayout>
+                <CategoriesManagementPage />
               </DashboardLayout>
             } />
             <Route path="/admin/customers" element={
