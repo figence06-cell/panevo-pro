@@ -23,6 +23,7 @@ import {
   List,
   TrendingUp,
   FolderOpen,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -62,6 +63,7 @@ export const AppSidebar: React.FC = () => {
         return [
           ...baseItems,
           { title: 'Ürünler', url: '/customer/products', icon: Grid3X3 },
+          { title: 'Sepetim', url: '/customer/cart', icon: ShoppingBag },
           { title: 'Siparişlerim', url: '/customer/orders', icon: ShoppingCart },
         ];
       
