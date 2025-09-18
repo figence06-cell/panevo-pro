@@ -63,7 +63,6 @@ export const AppSidebar: React.FC = () => {
           ...baseItems,
           { title: 'Ürünler', url: '/customer/products', icon: Grid3X3 },
           { title: 'Siparişlerim', url: '/customer/orders', icon: ShoppingCart },
-          { title: 'Sipariş Geçmişi', url: '/customer/order-history', icon: History },
         ];
       
       default:
