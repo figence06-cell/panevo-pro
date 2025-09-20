@@ -12,6 +12,7 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  product_id: string;
   products: {
     id: string;
     name: string;
@@ -42,6 +43,22 @@ export const SupplierOrdersPage = () => {
     if (!supplierData) return;
 
     try {
+      // First, get supplier's product IDs
+      const { data: supplierProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('supplier_id', supplierData.id);
+
+      if (productsError) throw productsError;
+
+      const supplierProductIds = supplierProducts?.map(p => p.id) || [];
+
+      if (supplierProductIds.length === 0) {
+        setOrders([]);
+        return;
+      }
+
+      // Get orders that contain supplier's products
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -53,27 +70,30 @@ export const SupplierOrdersPage = () => {
             customer_name,
             phone
           ),
-          order_items (
+          order_items!inner (
             id,
             quantity,
             unit_price,
             total_price,
+            product_id,
             products (
               id,
               name
             )
           )
         `)
+        .in('order_items.product_id', supplierProductIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Filter orders to only include those with supplier's products
-      const filteredOrders = data?.filter(order => 
-        order.order_items.some(item => 
-          item.products && item.products.id // Ensure product exists
+      // Filter order items to only include supplier's products
+      const filteredOrders = data?.map(order => ({
+        ...order,
+        order_items: order.order_items.filter(item => 
+          supplierProductIds.includes(item.product_id)
         )
-      ) || [];
+      })).filter(order => order.order_items.length > 0) || [];
 
       setOrders(filteredOrders);
     } catch (error: any) {
