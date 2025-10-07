@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Package, Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AddProductForm } from './AddProductForm';
 
 interface Product {
   id: string;
@@ -24,6 +26,8 @@ export const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [supplierData, setSupplierData] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -87,6 +91,17 @@ export const ProductsPage = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.categories?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEditProduct = (productId: string) => {
+    setEditingProductId(productId);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false);
+    setEditingProductId(null);
+    fetchProducts();
+  };
 
   const deleteProduct = async (productId: string) => {
     try {
@@ -195,7 +210,11 @@ export const ProductsPage = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditProduct(product.id)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -213,6 +232,15 @@ export const ProductsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <AddProductForm 
+            productId={editingProductId || undefined}
+            onSuccess={handleEditSuccess}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

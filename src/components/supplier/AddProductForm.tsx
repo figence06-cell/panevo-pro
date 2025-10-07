@@ -28,7 +28,12 @@ interface Category {
   name: string;
 }
 
-export const AddProductForm = () => {
+interface AddProductFormProps {
+  productId?: string;
+  onSuccess?: () => void;
+}
+
+export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
