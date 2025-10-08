@@ -235,6 +235,9 @@ export const ProductsPage = () => {
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ürün Düzenle</DialogTitle>
+          </DialogHeader>
           <AddProductForm 
             productId={editingProductId || undefined}
             onSuccess={handleEditSuccess}

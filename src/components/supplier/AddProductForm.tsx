@@ -76,10 +76,33 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
         
         setSupplierData(supplier);
       }
+
+      // Fetch product data if editing
+      if (productId) {
+        const { data: productData, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', productId)
+          .single();
+
+        if (productData && !error) {
+          form.reset({
+            name: productData.name,
+            category_id: productData.category_id,
+            shelf_price: productData.shelf_price,
+            selling_price: productData.selling_price,
+            stock_quantity: productData.stock_quantity,
+          });
+          
+          if (productData.images) {
+            setImageUrls(productData.images);
+          }
+        }
+      }
     };
 
     fetchData();
-  }, [user]);
+  }, [user, productId, form]);
 
   const handleImageUpload = async (files: File[]) => {
     setUploading(true);
@@ -132,7 +155,7 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
   };
 
   const onSubmit = async (data: ProductFormData) => {
-    if (!supplierData) {
+    if (!supplierData && !productId) {
       toast({
         title: 'Hata',
         description: 'Tedarikçi bilgileri bulunamadı',
@@ -144,32 +167,59 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
     setLoading(true);
     
     try {
-      const { error } = await supabase
-        .from('products')
-        .insert({
-          name: data.name,
-          category_id: data.category_id,
-          shelf_price: data.shelf_price,
-          selling_price: data.selling_price,
-          stock_quantity: data.stock_quantity,
-          supplier_id: supplierData.id,
-          images: imageUrls,
+      if (productId) {
+        // Update existing product
+        const { error } = await supabase
+          .from('products')
+          .update({
+            name: data.name,
+            category_id: data.category_id,
+            shelf_price: data.shelf_price,
+            selling_price: data.selling_price,
+            stock_quantity: data.stock_quantity,
+            images: imageUrls,
+          })
+          .eq('id', productId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Başarılı',
+          description: 'Ürün başarıyla güncellendi',
         });
 
-      if (error) throw error;
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        // Insert new product
+        const { error } = await supabase
+          .from('products')
+          .insert({
+            name: data.name,
+            category_id: data.category_id,
+            shelf_price: data.shelf_price,
+            selling_price: data.selling_price,
+            stock_quantity: data.stock_quantity,
+            supplier_id: supplierData.id,
+            images: imageUrls,
+          });
 
-      toast({
-        title: 'Başarılı',
-        description: 'Ürün başarıyla eklendi',
-      });
+        if (error) throw error;
 
-      form.reset();
-      setImageUrls([]);
-      setSelectedImages([]);
+        toast({
+          title: 'Başarılı',
+          description: 'Ürün başarıyla eklendi',
+        });
+
+        form.reset();
+        setImageUrls([]);
+        setSelectedImages([]);
+      }
     } catch (error: any) {
       toast({
         title: 'Hata',
-        description: error.message || 'Ürün eklenirken bir hata oluştu',
+        description: error.message || 'Bir hata oluştu',
         variant: 'destructive',
       });
     } finally {
@@ -183,7 +233,7 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Yeni Ürün Ekle
+            {productId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -351,7 +401,7 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
             </div>
 
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? 'Ekleniyor...' : 'Ürün Ekle'}
+                {loading ? (productId ? 'Güncelleniyor...' : 'Ekleniyor...') : (productId ? 'Ürünü Güncelle' : 'Ürün Ekle')}
               </Button>
             </form>
           </Form>
