@@ -38,10 +38,10 @@ export const DashboardHeader: React.FC = () => {
     <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+          <SidebarTrigger className="text-foreground hover:text-primary transition-colors md:text-muted-foreground md:hover:text-foreground h-10 w-10 md:h-auto md:w-auto p-2 md:p-1.5" />
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-foreground">TanePro B2B</span>
+            <span className="font-semibold text-foreground hidden sm:inline">TanePro B2B</span>
           </div>
         </div>
 
