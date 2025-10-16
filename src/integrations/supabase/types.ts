@@ -127,6 +127,39 @@ export type Database = {
           },
         ]
       }
+      order_supplier_links: {
+        Row: {
+          created_at: string
+          order_id: string
+          supplier_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          supplier_user_id: string
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          supplier_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_supplier_links_order_fk"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_supplier_links_supplier_user_fk"
+            columns: ["supplier_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string | null
