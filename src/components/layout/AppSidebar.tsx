@@ -24,6 +24,7 @@ import {
   TrendingUp,
   FolderOpen,
   ShoppingBag,
+  User,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,6 +39,8 @@ export const AppSidebar: React.FC = () => {
       { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
     ];
 
+    const profileItem = { title: 'Profilim', url: '/profile', icon: User };
+
     switch (profile?.role) {
       case 'admin':
         return [
@@ -47,6 +50,7 @@ export const AppSidebar: React.FC = () => {
           { title: 'Müşteri Yönetimi', url: '/admin/customers', icon: UserPlus },
           { title: 'Sipariş Yönetimi', url: '/admin/orders', icon: ShoppingCart },
           { title: 'Sipariş Geçmişi', url: '/admin/order-history', icon: History },
+          profileItem,
         ];
       
       case 'supplier':
@@ -57,6 +61,7 @@ export const AppSidebar: React.FC = () => {
           { title: 'Siparişlerim', url: '/supplier/orders', icon: ShoppingCart },
           { title: 'Sipariş Geçmişi', url: '/supplier/order-history', icon: History },
           { title: 'İstatistikler', url: '/supplier/stats', icon: TrendingUp },
+          profileItem,
         ];
       
       case 'customer':
@@ -65,10 +70,11 @@ export const AppSidebar: React.FC = () => {
           { title: 'Ürünler', url: '/customer/products', icon: Grid3X3 },
           { title: 'Sepetim', url: '/customer/cart', icon: ShoppingBag },
           { title: 'Siparişlerim', url: '/customer/orders', icon: ShoppingCart },
+          profileItem,
         ];
       
       default:
-        return baseItems;
+        return [...baseItems, profileItem];
     }
   };
 

@@ -16,6 +16,7 @@ import { CartPage } from "@/components/customer/CartPage";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,13 @@ const App = () => (
             <Route path="/customer/cart" element={
               <DashboardLayout>
                 <CartPage />
+              </DashboardLayout>
+            } />
+            
+            {/* Profile Route */}
+            <Route path="/profile" element={
+              <DashboardLayout>
+                <ProfilePage />
               </DashboardLayout>
             } />
             
