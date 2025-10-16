@@ -41,34 +41,43 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          company_representative: string | null
           created_at: string | null
           customer_name: string
           email: string | null
           id: string
           phone: string
           tabdk_no: string
+          tax_number: string | null
+          tax_office: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           address?: string | null
+          company_representative?: string | null
           created_at?: string | null
           customer_name: string
           email?: string | null
           id?: string
           phone: string
           tabdk_no: string
+          tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           address?: string | null
+          company_representative?: string | null
           created_at?: string | null
           customer_name?: string
           email?: string | null
           id?: string
           phone?: string
           tabdk_no?: string
+          tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -282,34 +291,43 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          company_representative: string | null
           created_at: string | null
           email: string | null
           id: string
           phone: string
           supplier_name: string
           tabdk_no: string
+          tax_number: string | null
+          tax_office: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           address?: string | null
+          company_representative?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           phone: string
           supplier_name: string
           tabdk_no: string
+          tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           address?: string | null
+          company_representative?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           phone?: string
           supplier_name?: string
           tabdk_no?: string
+          tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
