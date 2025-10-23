@@ -18,9 +18,10 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role: UserRole, fullName: string, tabdkNo: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   isAdmin: boolean;
   isSupplier: boolean;
   isCustomer: boolean;
@@ -99,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
+  const signUp = async (email: string, password: string, role: UserRole, fullName: string, tabdkNo: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -111,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             role,
             full_name: fullName,
+            tabdk_no: tabdkNo,
           }
         }
       });
@@ -188,6 +190,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast({
+          title: "Hata",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Başarılı",
+          description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.",
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
   const isAdmin = profile?.role === 'admin';
   const isSupplier = profile?.role === 'supplier';
   const isCustomer = profile?.role === 'customer';
@@ -200,6 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    resetPassword,
     isAdmin,
     isSupplier,
     isCustomer,

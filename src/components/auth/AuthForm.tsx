@@ -9,8 +9,10 @@ import { Loader2, Building2 } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 export const AuthForm: React.FC = () => {
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, resetPassword, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const [signInData, setSignInData] = useState({
     email: '',
@@ -22,6 +24,7 @@ export const AuthForm: React.FC = () => {
     password: '',
     confirmPassword: '',
     fullName: '',
+    tabdkNo: '',
     role: 'customer' as UserRole,
   });
 
@@ -48,7 +51,21 @@ export const AuthForm: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await signUp(signUpData.email, signUpData.password, signUpData.role, signUpData.fullName);
+      await signUp(signUpData.email, signUpData.password, signUpData.role, signUpData.fullName, signUpData.tabdkNo);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await resetPassword(resetEmail);
+      setShowForgotPassword(false);
+      setResetEmail('');
     } finally {
       setIsLoading(false);
     }
@@ -84,39 +101,81 @@ export const AuthForm: React.FC = () => {
 
             <CardContent>
               <TabsContent value="signin" className="space-y-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="form-group">
-                    <Label htmlFor="signin-email" className="form-label">E-posta</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="ornek@email.com"
-                      value={signInData.email}
-                      onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
-                      required
-                      className="transition-colors"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <Label htmlFor="signin-password" className="form-label">Şifre</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      value={signInData.password}
-                      onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
-                      required
-                      className="transition-colors"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full gradient-primary shadow-primary transition-all"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Giriş Yap
-                  </Button>
-                </form>
+                {showForgotPassword ? (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="form-group">
+                      <Label htmlFor="reset-email" className="form-label">E-posta</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="ornek@email.com"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                        className="transition-colors"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full gradient-primary shadow-primary transition-all"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Şifre Sıfırlama Bağlantısı Gönder
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowForgotPassword(false)}
+                    >
+                      Geri Dön
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="form-group">
+                      <Label htmlFor="signin-email" className="form-label">E-posta</Label>
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder="ornek@email.com"
+                        value={signInData.email}
+                        onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
+                        required
+                        className="transition-colors"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <Label htmlFor="signin-password" className="form-label">Şifre</Label>
+                      <Input
+                        id="signin-password"
+                        type="password"
+                        value={signInData.password}
+                        onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                        required
+                        className="transition-colors"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Şifremi Unuttum
+                      </button>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full gradient-primary shadow-primary transition-all"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Giriş Yap
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
@@ -141,6 +200,18 @@ export const AuthForm: React.FC = () => {
                       placeholder="ornek@email.com"
                       value={signUpData.email}
                       onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                      required
+                      className="transition-colors"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <Label htmlFor="signup-tabdk" className="form-label form-label-required">TAPDK No</Label>
+                    <Input
+                      id="signup-tabdk"
+                      type="text"
+                      placeholder="TAPDK No"
+                      value={signUpData.tabdkNo}
+                      onChange={(e) => setSignUpData({ ...signUpData, tabdkNo: e.target.value })}
                       required
                       className="transition-colors"
                     />
