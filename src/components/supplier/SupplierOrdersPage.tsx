@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -152,6 +154,30 @@ export const SupplierOrdersPage = () => {
     return orderItems.reduce((total, item) => total + item.total_price, 0);
   };
 
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Başarılı',
+        description: 'Sipariş durumu güncellendi',
+      });
+
+      fetchOrders();
+    } catch (error: any) {
+      toast({
+        title: 'Hata',
+        description: 'Sipariş durumu güncellenirken bir hata oluştu',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -199,17 +225,17 @@ export const SupplierOrdersPage = () => {
           ) : (
             <div className="space-y-4">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="p-4 border border-border rounded-lg">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-foreground">
-                          Sipariş #{order.id.slice(0, 8)}
-                        </h3>
-                        <Badge {...getStatusBadge(order.status)}>
-                          {getStatusBadge(order.status).label}
-                        </Badge>
-                      </div>
+                  <div key={order.id} className="p-4 border border-border rounded-lg">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-foreground">
+                            Sipariş #{order.id.slice(0, 8)}
+                          </h3>
+                          <Badge {...getStatusBadge(order.status)}>
+                            {getStatusBadge(order.status).label}
+                          </Badge>
+                        </div>
                       
                       {order.customers && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -229,6 +255,22 @@ export const SupplierOrdersPage = () => {
                           <DollarSign className="h-4 w-4" />
                           <span>₺{getSupplierItemsTotal(order.order_items).toFixed(2)}</span>
                         </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">Sipariş Durumu</label>
+                        <Select value={order.status} onValueChange={(value) => handleStatusUpdate(order.id, value)}>
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Beklemede</SelectItem>
+                            <SelectItem value="confirmed">Onaylandı</SelectItem>
+                            <SelectItem value="shipped">Kargoya Verildi</SelectItem>
+                            <SelectItem value="delivered">Teslim Edildi</SelectItem>
+                            <SelectItem value="cancelled">İptal Edildi</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
