@@ -21,7 +21,6 @@ import {
   Store,
   Grid3X3,
   List,
-  TrendingUp,
   FolderOpen,
   ShoppingBag,
   User,
@@ -60,7 +59,6 @@ export const AppSidebar: React.FC = () => {
           { title: 'Ürün Ekle', url: '/supplier/add-product', icon: Store },
           { title: 'Siparişlerim', url: '/supplier/orders', icon: ShoppingCart },
           { title: 'Sipariş Geçmişi', url: '/supplier/order-history', icon: History },
-          { title: 'İstatistikler', url: '/supplier/stats', icon: TrendingUp },
           profileItem,
         ];
       
