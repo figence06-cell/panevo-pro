@@ -346,10 +346,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_customer_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_customer_id: { Args: never; Returns: string }
     }
     Enums: {
       user_role: "admin" | "supplier" | "customer"
