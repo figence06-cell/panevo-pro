@@ -48,9 +48,9 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
     defaultValues: {
       name: '',
       category_id: '',
-      shelf_price: 0,
-      selling_price: 0,
-      stock_quantity: 0,
+      shelf_price: undefined,
+      selling_price: undefined,
+      stock_quantity: 12,
     }
   });
 
@@ -289,9 +289,9 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder="" 
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -309,9 +309,9 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder="" 
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -329,9 +329,9 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="0" 
+                      placeholder="12" 
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 12)}
                     />
                   </FormControl>
                   <FormMessage />
