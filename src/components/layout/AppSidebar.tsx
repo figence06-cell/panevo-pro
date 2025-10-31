@@ -49,7 +49,6 @@ export const AppSidebar: React.FC = () => {
           { title: 'Ürün Yönetimi', url: '/admin/products', icon: Package },
           { title: 'Müşteri Yönetimi', url: '/admin/customers', icon: UserPlus },
           { title: 'Sipariş Yönetimi', url: '/admin/orders', icon: ShoppingCart },
-          { title: 'Sipariş Geçmişi', url: '/admin/order-history', icon: History },
           profileItem,
         ];
       
@@ -59,7 +58,6 @@ export const AppSidebar: React.FC = () => {
           { title: 'Ürün Yönetimi', url: '/supplier/products', icon: Package },
           { title: 'Ürün Ekle', url: '/supplier/add-product', icon: Store },
           { title: 'Siparişlerim', url: '/supplier/orders', icon: ShoppingCart },
-          { title: 'Sipariş Geçmişi', url: '/supplier/order-history', icon: History },
           profileItem,
         ];
       
