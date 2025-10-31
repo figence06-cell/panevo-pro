@@ -46,6 +46,7 @@ export const AppSidebar: React.FC = () => {
           ...baseItems,
           { title: 'Tedarikçi Yönetimi', url: '/admin/suppliers', icon: Users },
           { title: 'Kategori Yönetimi', url: '/admin/categories', icon: FolderOpen },
+          { title: 'Ürün Yönetimi', url: '/admin/products', icon: Package },
           { title: 'Müşteri Yönetimi', url: '/admin/customers', icon: UserPlus },
           { title: 'Sipariş Yönetimi', url: '/admin/orders', icon: ShoppingCart },
           { title: 'Sipariş Geçmişi', url: '/admin/order-history', icon: History },

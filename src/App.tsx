@@ -10,6 +10,7 @@ import { ProductsPage } from "@/components/supplier/ProductsPage";
 import { SupplierOrdersPage } from "@/components/supplier/SupplierOrdersPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
 import { CategoriesManagementPage } from "@/components/admin/CategoriesManagementPage";
+import { ProductsManagementPage } from "@/components/admin/ProductsManagementPage";
 import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
 import { CustomerOrdersPage } from "@/components/customer/CustomerOrdersPage";
 import { CartPage } from "@/components/customer/CartPage";
@@ -45,6 +46,11 @@ const App = () => (
             <Route path="/admin/categories" element={
               <DashboardLayout>
                 <CategoriesManagementPage />
+              </DashboardLayout>
+            } />
+            <Route path="/admin/products" element={
+              <DashboardLayout>
+                <ProductsManagementPage />
               </DashboardLayout>
             } />
             <Route path="/admin/customers" element={
