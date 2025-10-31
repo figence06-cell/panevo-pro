@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Package, Search, ShoppingCart, User, Calendar, DollarSign } from 'lucide-react';
+import { Package, Search, ShoppingCart, User, Calendar, DollarSign, Phone, Mail, MapPin } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -29,6 +29,8 @@ interface Order {
   customers: {
     customer_name: string;
     phone: string;
+    email: string | null;
+    address: string | null;
   } | null;
   order_items: OrderItem[];
 }
@@ -70,7 +72,9 @@ export const SupplierOrdersPage = () => {
           created_at,
           customers (
             customer_name,
-            phone
+            phone,
+            email,
+            address
           ),
           order_items!inner (
             id,
@@ -238,11 +242,27 @@ export const SupplierOrdersPage = () => {
                         </div>
                       
                       {order.customers && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <User className="h-4 w-4" />
-                          <span>{order.customers.customer_name}</span>
-                          <span>•</span>
-                          <span>{order.customers.phone}</span>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{order.customers.customer_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="h-4 w-4" />
+                            <span>{order.customers.phone}</span>
+                          </div>
+                          {order.customers.email && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Mail className="h-4 w-4" />
+                              <span>{order.customers.email}</span>
+                            </div>
+                          )}
+                          {order.customers.address && (
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4 mt-0.5" />
+                              <span className="flex-1">{order.customers.address}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                       
