@@ -78,27 +78,47 @@ const DashboardPage: React.FC = () => {
               .single();
 
             if (supplier) {
-              const [productsRes, ordersRes] = await Promise.all([
-                supabase.from('products').select('id', { count: 'exact', head: true }).eq('supplier_id', supplier.id),
-                supabase
+              // First get product count
+              const productsRes = await supabase
+                .from('products')
+                .select('id', { count: 'exact', head: true })
+                .eq('supplier_id', supplier.id);
+
+              // Get order IDs from supplier links
+              const { data: supplierLinks } = await supabase
+                .from('order_supplier_links')
+                .select('order_id')
+                .eq('supplier_user_id', profile.id);
+
+              const orderIds = supplierLinks?.map(link => link.order_id) || [];
+
+              let pendingCount = 0;
+              let monthSales = 0;
+
+              if (orderIds.length > 0) {
+                // Get pending orders count
+                const pendingRes = await supabase
                   .from('orders')
-                  .select('id, total_amount, order_supplier_links!inner(supplier_user_id)', { count: 'exact' })
-                  .eq('order_supplier_links.supplier_user_id', profile.id)
-                  .eq('status', 'pending'),
-              ]);
+                  .select('id', { count: 'exact', head: true })
+                  .in('id', orderIds)
+                  .eq('status', 'pending');
 
-              const { data: completedOrders } = await supabase
-                .from('orders')
-                .select('total_amount, order_supplier_links!inner(supplier_user_id)')
-                .eq('order_supplier_links.supplier_user_id', profile.id)
-                .eq('status', 'completed')
-                .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+                pendingCount = pendingRes.count || 0;
 
-              const monthSales = completedOrders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+                // Get completed orders for monthly sales
+                const { data: completedOrders } = await supabase
+                  .from('orders')
+                  .select('total_amount')
+                  .in('id', orderIds)
+                  .eq('status', 'completed')
+                  .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+
+                monthSales = completedOrders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+              }
 
               setStats({
                 stat1: productsRes.count?.toString() || '0',
-                stat2: ordersRes.count?.toString() || '0',
+                stat2: pendingCount.toString(),
                 stat3: `₺${monthSales.toLocaleString('tr-TR')}`,
                 stat4: '-',
               });
