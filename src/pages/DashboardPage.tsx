@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Package, ShoppingCart, Users, TrendingUp, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+
+interface DashboardStats {
+  stat1: string;
+  stat2: string;
+  stat3: string;
+  stat4: string;
+}
 
 const DashboardPage: React.FC = () => {
   const { profile } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const getWelcomeMessage = () => {
     switch (profile?.role) {
@@ -33,28 +45,126 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!profile) return;
+
+      try {
+        setLoading(true);
+
+        switch (profile.role) {
+          case 'admin': {
+            const [suppliersRes, customersRes, ordersRes, productsRes] = await Promise.all([
+              supabase.from('suppliers').select('id', { count: 'exact', head: true }),
+              supabase.from('customers').select('id', { count: 'exact', head: true }),
+              supabase.from('orders').select('id', { count: 'exact', head: true }).neq('status', 'completed'),
+              supabase.from('products').select('id', { count: 'exact', head: true }),
+            ]);
+
+            setStats({
+              stat1: suppliersRes.count?.toString() || '0',
+              stat2: customersRes.count?.toString() || '0',
+              stat3: ordersRes.count?.toString() || '0',
+              stat4: productsRes.count?.toString() || '0',
+            });
+            break;
+          }
+
+          case 'supplier': {
+            const { data: supplier } = await supabase
+              .from('suppliers')
+              .select('id')
+              .eq('user_id', profile.id)
+              .single();
+
+            if (supplier) {
+              const [productsRes, ordersRes] = await Promise.all([
+                supabase.from('products').select('id', { count: 'exact', head: true }).eq('supplier_id', supplier.id),
+                supabase
+                  .from('orders')
+                  .select('id, total_amount, order_supplier_links!inner(supplier_user_id)', { count: 'exact' })
+                  .eq('order_supplier_links.supplier_user_id', profile.id)
+                  .eq('status', 'pending'),
+              ]);
+
+              const { data: completedOrders } = await supabase
+                .from('orders')
+                .select('total_amount, order_supplier_links!inner(supplier_user_id)')
+                .eq('order_supplier_links.supplier_user_id', profile.id)
+                .eq('status', 'completed')
+                .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+
+              const monthSales = completedOrders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+
+              setStats({
+                stat1: productsRes.count?.toString() || '0',
+                stat2: ordersRes.count?.toString() || '0',
+                stat3: `₺${monthSales.toLocaleString('tr-TR')}`,
+                stat4: '-',
+              });
+            }
+            break;
+          }
+
+          case 'customer': {
+            const { data: customer } = await supabase
+              .from('customers')
+              .select('id')
+              .eq('user_id', profile.id)
+              .single();
+
+            if (customer) {
+              const [allOrdersRes, pendingOrdersRes, completedOrdersRes] = await Promise.all([
+                supabase.from('orders').select('id', { count: 'exact', head: true }).eq('customer_id', customer.id),
+                supabase.from('orders').select('id', { count: 'exact', head: true }).eq('customer_id', customer.id).eq('status', 'pending'),
+                supabase.from('orders').select('id', { count: 'exact', head: true }).eq('customer_id', customer.id).eq('status', 'completed'),
+              ]);
+
+              setStats({
+                stat1: allOrdersRes.count?.toString() || '0',
+                stat2: pendingOrdersRes.count?.toString() || '0',
+                stat3: completedOrdersRes.count?.toString() || '0',
+                stat4: '-',
+              });
+            }
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        toast.error('İstatistikler yüklenirken bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [profile]);
+
   const getQuickStats = () => {
+    if (!stats) return [];
+
     switch (profile?.role) {
       case 'admin':
         return [
-          { title: 'Toplam Tedarikçi', value: '12', icon: Building2, color: 'bg-primary' },
-          { title: 'Toplam Müşteri', value: '48', icon: Users, color: 'bg-accent' },
-          { title: 'Aktif Siparişler', value: '23', icon: ShoppingCart, color: 'bg-warning' },
-          { title: 'Toplam Ürün', value: '156', icon: Package, color: 'bg-muted' },
+          { title: 'Toplam Tedarikçi', value: stats.stat1, icon: Building2, color: 'bg-primary' },
+          { title: 'Toplam Müşteri', value: stats.stat2, icon: Users, color: 'bg-accent' },
+          { title: 'Aktif Siparişler', value: stats.stat3, icon: ShoppingCart, color: 'bg-warning' },
+          { title: 'Toplam Ürün', value: stats.stat4, icon: Package, color: 'bg-muted' },
         ];
       case 'supplier':
         return [
-          { title: 'Toplam Ürünüm', value: '24', icon: Package, color: 'bg-primary' },
-          { title: 'Bekleyen Siparişler', value: '8', icon: ShoppingCart, color: 'bg-warning' },
-          { title: 'Bu Ay Satış', value: '₺12,450', icon: TrendingUp, color: 'bg-accent' },
-          { title: 'Müşteri Puanı', value: '4.8', icon: Star, color: 'bg-muted' },
+          { title: 'Toplam Ürünüm', value: stats.stat1, icon: Package, color: 'bg-primary' },
+          { title: 'Bekleyen Siparişler', value: stats.stat2, icon: ShoppingCart, color: 'bg-warning' },
+          { title: 'Bu Ay Satış', value: stats.stat3, icon: TrendingUp, color: 'bg-accent' },
+          { title: 'Müşteri Puanı', value: stats.stat4, icon: Star, color: 'bg-muted' },
         ];
       case 'customer':
         return [
-          { title: 'Toplam Siparişim', value: '15', icon: ShoppingCart, color: 'bg-primary' },
-          { title: 'Bekleyen', value: '2', icon: Package, color: 'bg-warning' },
-          { title: 'Tamamlanan', value: '13', icon: TrendingUp, color: 'bg-accent' },
-          { title: 'Favori Ürünler', value: '8', icon: Star, color: 'bg-muted' },
+          { title: 'Toplam Siparişim', value: stats.stat1, icon: ShoppingCart, color: 'bg-primary' },
+          { title: 'Bekleyen', value: stats.stat2, icon: Package, color: 'bg-warning' },
+          { title: 'Tamamlanan', value: stats.stat3, icon: TrendingUp, color: 'bg-accent' },
+          { title: 'Favori Ürünler', value: stats.stat4, icon: Star, color: 'bg-muted' },
         ];
       default:
         return [];
@@ -93,21 +203,37 @@ const DashboardPage: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {quickStats.map((stat, index) => (
-          <Card key={index} className="transition-all hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className={`h-8 w-8 rounded-lg ${stat.color}/10 flex items-center justify-center`}>
-                <stat.icon className={`h-4 w-4 ${stat.color.replace('bg-', 'text-')}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+        {loading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-20" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          quickStats.map((stat, index) => (
+            <Card key={index} className="transition-all hover:shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <div className={`h-8 w-8 rounded-lg ${stat.color}/10 flex items-center justify-center`}>
+                  <stat.icon className={`h-4 w-4 ${stat.color.replace('bg-', 'text-')}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Recent Activity */}
