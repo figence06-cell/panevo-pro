@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Package, Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Package, Search, Plus, Edit, Trash2, LayoutGrid, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AddProductForm } from './AddProductForm';
 
@@ -19,6 +19,7 @@ interface Product {
   stock_quantity: number;
   categories: { name: string } | null;
   created_at: string;
+  images: string[] | null;
 }
 
 export const ProductsPage = () => {
@@ -28,6 +29,7 @@ export const ProductsPage = () => {
   const [supplierData, setSupplierData] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -44,6 +46,7 @@ export const ProductsPage = () => {
           selling_price,
           stock_quantity,
           created_at,
+          images,
           categories (
             name
           )
@@ -154,10 +157,28 @@ export const ProductsPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Ürünlerim ({products.length})
-          </CardTitle>
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Ürünlerim ({products.length})
+            </CardTitle>
+            <div className="flex gap-1 border border-border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -184,7 +205,7 @@ export const ProductsPage = () => {
                 </Link>
               )}
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <div className="grid gap-4">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="p-4 border border-border rounded-lg">
@@ -227,6 +248,72 @@ export const ProductsPage = () => {
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-square relative bg-muted">
+                    {product.images && product.images.length > 0 ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-16 w-16 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge 
+                      className="absolute top-2 right-2"
+                      variant={product.stock_quantity > 0 ? "default" : "destructive"}
+                    >
+                      Stok: {product.stock_quantity}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4 space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-foreground line-clamp-2 min-h-[3rem]">
+                        {product.name}
+                      </h3>
+                      {product.categories && (
+                        <Badge variant="secondary" className="mt-2">
+                          {product.categories.name}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Raf Fiyatı:</span>
+                        <span className="font-medium">₺{product.shelf_price}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Satış Fiyatı:</span>
+                        <span className="font-medium">₺{product.selling_price}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleEditProduct(product.id)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Düzenle
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => deleteProduct(product.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
