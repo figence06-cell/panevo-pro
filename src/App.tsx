@@ -11,6 +11,7 @@ import { SupplierOrdersPage } from "@/components/supplier/SupplierOrdersPage";
 import { SuppliersManagementPage } from "@/components/admin/SuppliersManagementPage";
 import { CategoriesManagementPage } from "@/components/admin/CategoriesManagementPage";
 import { ProductsManagementPage } from "@/components/admin/ProductsManagementPage";
+import { AdminOrdersManagementPage } from "@/components/admin/AdminOrdersManagementPage";
 import { CustomerProductsPage } from "@/components/customer/CustomerProductsPage";
 import { CustomerOrdersPage } from "@/components/customer/CustomerOrdersPage";
 import { CartPage } from "@/components/customer/CartPage";
@@ -63,10 +64,7 @@ const App = () => (
             } />
             <Route path="/admin/orders" element={
               <DashboardLayout>
-                <div className="text-center p-8">
-                  <h2 className="text-2xl font-bold mb-4">Sipariş Yönetimi</h2>
-                  <p className="text-muted-foreground">Bu özellik yakında eklenecek...</p>
-                </div>
+                <AdminOrdersManagementPage />
               </DashboardLayout>
             } />
             
