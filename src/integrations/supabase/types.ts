@@ -347,6 +347,20 @@ export type Database = {
     }
     Functions: {
       get_current_customer_id: { Args: never; Returns: string }
+      get_supplier_product_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          product_id: string
+        }[]
+      }
+      is_supplier_for_order: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_users_customer: {
+        Args: { _customer_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "supplier" | "customer"
