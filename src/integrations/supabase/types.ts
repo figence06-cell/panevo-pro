@@ -346,6 +346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_supplier_view_customer: {
+        Args: { _customer_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_current_customer_id: { Args: never; Returns: string }
       get_supplier_product_ids: {
         Args: { _user_id: string }
@@ -353,6 +357,7 @@ export type Database = {
           product_id: string
         }[]
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_supplier_for_order: {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
