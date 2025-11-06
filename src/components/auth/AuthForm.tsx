@@ -176,7 +176,7 @@ export const AuthForm: React.FC = () => {
                       Giriş Yap
                     </Button>
                     <Alert className="mt-4">
-                      <AlertDescription className="text-xs text-center">
+                      <AlertDescription className="text-sm font-bold text-center">
                         BU SİTE ALKOLLÜ İÇKİ RUHSATINA SAHİP ÜRETİCİ, DİSTRİBUTÖR VE SATIŞ NOKTALARI İÇİN HAZIRLANMIŞTIR.
                       </AlertDescription>
                     </Alert>
