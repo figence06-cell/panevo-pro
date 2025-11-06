@@ -30,6 +30,7 @@ interface Order {
     phone: string;
     email: string | null;
     address: string | null;
+    company_representative: string | null;
   } | null;
   order_items: OrderItem[];
 }
@@ -54,7 +55,8 @@ export const AdminOrdersManagementPage = () => {
             customer_name,
             phone,
             email,
-            address
+            address,
+            company_representative
           ),
           order_items (
             id,
@@ -269,12 +271,15 @@ export const AdminOrdersManagementPage = () => {
                       {order.customers ? (
                         <div className="space-y-1">
                           <p className="font-medium">{order.customers.customer_name}</p>
+                          {order.customers.company_representative && (
+                            <p className="text-sm text-muted-foreground">Yetkili: {order.customers.company_representative}</p>
+                          )}
                           <p className="text-sm text-muted-foreground">{order.customers.phone}</p>
                           {order.customers.email && (
                             <p className="text-sm text-muted-foreground">{order.customers.email}</p>
                           )}
                           {order.customers.address && (
-                            <p className="text-sm text-muted-foreground">{order.customers.address}</p>
+                            <p className="text-sm text-muted-foreground">Adres: {order.customers.address}</p>
                           )}
                         </div>
                       ) : (
