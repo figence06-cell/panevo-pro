@@ -175,7 +175,7 @@ export const AuthForm: React.FC = () => {
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                       Giriş Yap
                     </Button>
-                    <Alert className="mt-4">
+                    <Alert variant="warning" className="mt-4">
                       <AlertDescription className="text-sm font-bold text-center">
                         BU SİTE ALKOLLÜ İÇKİ RUHSATINA SAHİP ÜRETİCİ, DİSTRİBUTÖR VE SATIŞ NOKTALARI İÇİN HAZIRLANMIŞTIR.
                       </AlertDescription>
