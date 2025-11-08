@@ -229,23 +229,38 @@ export const SupplierOrdersPage = () => {
           ) : (
             <div className="space-y-4">
               {filteredOrders.map((order) => (
-                  <div key={order.id} className="p-4 border border-border rounded-lg">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-foreground">
-                            Sipariş #{order.id.slice(0, 8)}
-                          </h3>
-                          <Badge {...getStatusBadge(order.status)}>
-                            {getStatusBadge(order.status).label}
-                          </Badge>
-                        </div>
-                      
-                      {order.customers && (
+                <div key={order.id} className="p-4 border border-border rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold text-foreground">
+                        Sipariş #{order.id.slice(0, 8)}
+                      </h3>
+                      <Badge {...getStatusBadge(order.status)}>
+                        {getStatusBadge(order.status).label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>{new Date(order.created_at).toLocaleDateString('tr-TR')}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        <span>₺{getSupplierItemsTotal(order.order_items).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {order.customers && (
+                      <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                        <h4 className="font-medium text-foreground flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Müşteri Bilgileri
+                        </h4>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{order.customers.customer_name}</span>
+                            <span className="font-medium text-foreground">{order.customers.customer_name}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Phone className="h-4 w-4" />
@@ -259,39 +274,28 @@ export const SupplierOrdersPage = () => {
                           )}
                           {order.customers.address && (
                             <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4 mt-0.5" />
+                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                               <span className="flex-1">{order.customers.address}</span>
                             </div>
                           )}
                         </div>
-                      )}
-                      
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{new Date(order.created_at).toLocaleDateString('tr-TR')}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          <span>₺{getSupplierItemsTotal(order.order_items).toFixed(2)}</span>
-                        </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Sipariş Durumu</label>
-                        <Select value={order.status} onValueChange={(value) => handleStatusUpdate(order.id, value)}>
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Beklemede</SelectItem>
-                            <SelectItem value="confirmed">Onaylandı</SelectItem>
-                            <SelectItem value="shipped">Kargoya Verildi</SelectItem>
-                            <SelectItem value="delivered">Teslim Edildi</SelectItem>
-                            <SelectItem value="cancelled">İptal Edildi</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    )}
+                    
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                      <h4 className="font-medium text-foreground">Sipariş Durumu</h4>
+                      <Select value={order.status} onValueChange={(value) => handleStatusUpdate(order.id, value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Beklemede</SelectItem>
+                          <SelectItem value="confirmed">Onaylandı</SelectItem>
+                          <SelectItem value="shipped">Kargoya Verildi</SelectItem>
+                          <SelectItem value="delivered">Teslim Edildi</SelectItem>
+                          <SelectItem value="cancelled">İptal Edildi</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
