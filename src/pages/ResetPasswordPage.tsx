@@ -12,7 +12,7 @@ const ResetPasswordPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [validToken, setValidToken] = useState(false);
+  const [validToken, setValidToken] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,8 +21,24 @@ const ResetPasswordPage: React.FC = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
     const accessToken = hashParams.get('access_token');
+    const error = hashParams.get('error');
+    const errorCode = hashParams.get('error_code');
 
-    if (type === 'recovery' && accessToken) {
+    if (error || errorCode) {
+      // Handle error cases (expired link, invalid link, etc.)
+      let errorMessage = "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.";
+      
+      if (errorCode === 'otp_expired') {
+        errorMessage = "Şifre sıfırlama bağlantısının süresi dolmuş. Lütfen yeni bir bağlantı isteyin.";
+      }
+      
+      toast({
+        title: "Geçersiz Bağlantı",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setValidToken(false);
+    } else if (type === 'recovery' && accessToken) {
       setValidToken(true);
     } else {
       toast({
@@ -30,9 +46,9 @@ const ResetPasswordPage: React.FC = () => {
         description: "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
         variant: "destructive",
       });
-      navigate('/auth');
+      setValidToken(false);
     }
-  }, [navigate, toast]);
+  }, [toast]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +105,34 @@ const ResetPasswordPage: React.FC = () => {
     }
   };
 
-  if (!validToken) {
+  if (validToken === false) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Bağlantı Geçersiz</CardTitle>
+            <CardDescription>
+              Şifre sıfırlama bağlantısının süresi dolmuş veya geçersiz
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Şifre sıfırlama bağlantıları güvenlik nedeniyle kısa sürelidir. 
+              Lütfen yeni bir şifre sıfırlama bağlantısı isteyin.
+            </p>
+            <Button 
+              onClick={() => navigate('/auth')} 
+              className="w-full"
+            >
+              Giriş Sayfasına Dön
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (validToken === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
