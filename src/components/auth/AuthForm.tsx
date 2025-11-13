@@ -18,6 +18,7 @@ export const AuthForm: React.FC = () => {
   const [signInData, setSignInData] = useState({
     email: '',
     password: '',
+    tabdkNo: '',
   });
 
   const [signUpData, setSignUpData] = useState({
@@ -148,10 +149,23 @@ export const AuthForm: React.FC = () => {
                       />
                     </div>
                     <div className="form-group">
+                      <Label htmlFor="signin-tabdk" className="form-label">TAPDK No</Label>
+                      <Input
+                        id="signin-tabdk"
+                        type="text"
+                        placeholder="TAPDK Numaranız"
+                        value={signInData.tabdkNo}
+                        onChange={(e) => setSignInData({ ...signInData, tabdkNo: e.target.value })}
+                        required
+                        className="transition-colors"
+                      />
+                    </div>
+                    <div className="form-group">
                       <Label htmlFor="signin-password" className="form-label">Şifre</Label>
                       <Input
                         id="signin-password"
                         type="password"
+                        placeholder="••••••••"
                         value={signInData.password}
                         onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                         required
