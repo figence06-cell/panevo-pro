@@ -104,18 +104,79 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
     fetchData();
   }, [user, productId, form]);
 
+  const resizeImage = (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            reject(new Error('Canvas context oluşturulamadı'));
+            return;
+          }
+
+          // Maksimum boyut 1000x1000, en-boy oranını koru
+          const MAX_SIZE = 1000;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_SIZE || height > MAX_SIZE) {
+            if (width > height) {
+              height = (height / width) * MAX_SIZE;
+              width = MAX_SIZE;
+            } else {
+              width = (width / height) * MAX_SIZE;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // RGB formatında çiz (alpha kanalı yok)
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Resim dönüştürülemedi'));
+              }
+            },
+            'image/jpeg',
+            0.9
+          );
+        };
+        img.onerror = () => reject(new Error('Resim yüklenemedi'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Dosya okunamadı'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleImageUpload = async (files: File[]) => {
     setUploading(true);
     const uploadedUrls: string[] = [];
 
     try {
       for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        // Resmi yeniden boyutlandır
+        const resizedBlob = await resizeImage(file);
+        
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
         
         const { error: uploadError } = await supabase.storage
           .from('product-images')
-          .upload(fileName, file);
+          .upload(fileName, resizedBlob, {
+            contentType: 'image/jpeg'
+          });
 
         if (uploadError) throw uploadError;
 
