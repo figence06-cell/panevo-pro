@@ -40,6 +40,8 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
   const [supplierData, setSupplierData] = useState<any>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -207,12 +209,70 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       setSelectedImages(prev => [...prev, ...files]);
+      
+      // Önizleme oluştur
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+      
       handleImageUpload(files);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+
+    if (files.length > 0) {
+      setSelectedImages(prev => [...prev, ...files]);
+      
+      // Önizleme oluştur
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      handleImageUpload(files);
+    } else {
+      toast({
+        title: "Geçersiz dosya",
+        description: "Lütfen sadece resim dosyaları yükleyin",
+        variant: "destructive",
+      });
     }
   };
 
   const removeImage = (index: number) => {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removePreview = (index: number) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: ProductFormData) => {
@@ -407,13 +467,27 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
                 <span className="text-sm font-medium">Ürün Resimleri</span>
               </div>
               
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+              <div 
+                className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+                  isDragging 
+                    ? 'border-primary bg-primary/5 scale-[1.02]' 
+                    : 'border-muted-foreground/25 hover:border-primary/50'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <div className="text-center">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <Upload className={`mx-auto h-8 w-8 transition-colors ${
+                    isDragging ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
                   <div className="mt-2">
                     <label htmlFor="image-upload" className="cursor-pointer">
-                      <span className="text-sm text-primary hover:underline">
-                        Resim yüklemek için tıklayın
+                      <span className="text-sm text-primary hover:underline font-medium">
+                        {isDragging 
+                          ? 'Resimleri buraya bırakın' 
+                          : 'Resimleri sürükleyip bırakın veya tıklayın'
+                        }
                       </span>
                       <input
                         id="image-upload"
@@ -427,36 +501,65 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
                     </label>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG, WEBP (Maks. 10MB)
+                    PNG, JPG (Otomatik olarak 1000x1000 piksele küçültülür)
                   </p>
                 </div>
               </div>
 
-              {/* Image Preview */}
-              {imageUrls.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Ürün resmi ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+              {/* Yükleme Önizlemeleri */}
+              {imagePreviews.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Yükleniyor...</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden border-2 border-primary/50 bg-muted/30">
+                          <img
+                            src={preview}
+                            alt={`Önizleme ${index + 1}`}
+                            className="w-full h-full object-cover opacity-60"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePreview(index)}
+                          className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {uploading && (
-                <div className="text-center text-sm text-muted-foreground">
-                  Resimler yükleniyor...
+              {/* Yüklenen Resimler */}
+              {imageUrls.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Yüklenen Resimler</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {imageUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden border-2 border-green-500/50">
+                          <img
+                            src={url}
+                            alt={`Ürün resmi ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
