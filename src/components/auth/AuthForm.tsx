@@ -149,14 +149,15 @@ export const AuthForm: React.FC = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <Label htmlFor="signin-tabdk" className="form-label">TAPDK No</Label>
+                      <Label htmlFor="signin-tabdk" className="form-label">
+                        TAPDK No <span className="text-muted-foreground text-xs">(Admin için opsiyonel)</span>
+                      </Label>
                       <Input
                         id="signin-tabdk"
                         type="text"
                         placeholder="TAPDK Numaranız"
                         value={signInData.tabdkNo}
                         onChange={(e) => setSignInData({ ...signInData, tabdkNo: e.target.value })}
-                        required
                         className="transition-colors"
                       />
                     </div>
