@@ -120,8 +120,8 @@ export const AddProductForm = ({ productId, onSuccess }: AddProductFormProps) =>
             return;
           }
 
-          // Maksimum boyut 1000x1000, en-boy oranını koru
-          const MAX_SIZE = 1000;
+          // Maksimum boyut 1200x1200, en-boy oranını koru
+          const MAX_SIZE = 1200;
           let width = img.width;
           let height = img.height;
 
