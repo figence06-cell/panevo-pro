@@ -275,7 +275,7 @@ export const ProductsPage = () => {
                   </div>
                   <CardContent className="p-4 space-y-3">
                     <div>
-                      <h3 className="font-semibold text-foreground line-clamp-2 min-h-[3rem]">
+                      <h3 className="font-semibold text-foreground">
                         {product.name}
                       </h3>
                       {product.categories && (
