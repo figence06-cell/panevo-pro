@@ -241,7 +241,7 @@ export const CustomerProductsPage = () => {
                     {/* Discount Badge */}
                     {product.shelf_price > product.selling_price && (
                       <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
-                        %{Math.round(((product.shelf_price - product.selling_price) / product.shelf_price) * 100)} İNDİRİM
+                        %{Math.round(((product.shelf_price - product.selling_price) / product.selling_price) * 100)} İNDİRİM
                       </Badge>
                     )}
 
