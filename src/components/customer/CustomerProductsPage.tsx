@@ -254,7 +254,7 @@ export const CustomerProductsPage = () => {
                   </div>
 
                   <CardContent className="p-3 space-y-2">
-                    <h3 className="font-medium text-sm leading-tight line-clamp-2">
+                    <h3 className="font-medium text-sm leading-tight">
                       {product.name}
                     </h3>
                     
