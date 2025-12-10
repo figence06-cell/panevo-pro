@@ -20,6 +20,7 @@ interface Product {
   stock_quantity: number;
   images: string[] | null;
   created_at: string;
+  updated_at: string;
   categories?: {
     name: string;
   };
@@ -198,13 +199,15 @@ export const ProductsManagementPage: React.FC = () => {
                     <TableHead>Stok</TableHead>
                     <TableHead>Raf Fiyatı</TableHead>
                     <TableHead>Satış Fiyatı</TableHead>
+                    <TableHead>Eklenme Tarihi</TableHead>
+                    <TableHead>Güncellenme</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProducts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8">
+                      <TableCell colSpan={10} className="text-center py-8">
                         {searchTerm ? 'Arama kriterlerine uygun ürün bulunamadı.' : 'Henüz ürün eklenmemiş.'}
                       </TableCell>
                     </TableRow>
@@ -247,6 +250,12 @@ export const ProductsManagementPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           ₺{product.selling_price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{new Date(product.created_at).toLocaleDateString('tr-TR')}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{new Date(product.updated_at).toLocaleDateString('tr-TR')}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">

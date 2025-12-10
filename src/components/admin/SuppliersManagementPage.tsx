@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Plus, Search, Users, Phone, Mail } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Users, Phone, Mail, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { AddEditSupplierForm } from './AddEditSupplierForm';
@@ -17,8 +17,10 @@ interface Supplier {
   email?: string;
   tabdk_no: string;
   address?: string;
+  user_id?: string;
   created_at: string;
   updated_at: string;
+  last_login?: string;
 }
 
 export const SuppliersManagementPage: React.FC = () => {
@@ -31,13 +33,39 @@ export const SuppliersManagementPage: React.FC = () => {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: suppliersData, error } = await supabase
         .from('suppliers')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSuppliers(data || []);
+
+      // Fetch last login times for suppliers with user_id
+      const userIds = suppliersData?.filter(s => s.user_id).map(s => s.user_id) || [];
+      
+      let sessionsMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: sessionsData } = await supabase
+          .from('user_sessions')
+          .select('user_id, last_seen_at')
+          .in('user_id', userIds)
+          .order('last_seen_at', { ascending: false });
+        
+        if (sessionsData) {
+          sessionsData.forEach(session => {
+            if (!sessionsMap[session.user_id]) {
+              sessionsMap[session.user_id] = session.last_seen_at;
+            }
+          });
+        }
+      }
+
+      const suppliersWithLogin = suppliersData?.map(supplier => ({
+        ...supplier,
+        last_login: supplier.user_id ? sessionsMap[supplier.user_id] : undefined
+      })) || [];
+
+      setSuppliers(suppliersWithLogin);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
       toast({
@@ -197,13 +225,14 @@ export const SuppliersManagementPage: React.FC = () => {
                     <TableHead>E-posta</TableHead>
                     <TableHead>Adres</TableHead>
                     <TableHead>Kayıt Tarihi</TableHead>
+                    <TableHead>Son Giriş</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredSuppliers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
+                      <TableCell colSpan={8} className="text-center py-8">
                         {searchTerm ? 'Arama kriterlerine uygun tedarikçi bulunamadı.' : 'Henüz tedarikçi eklenmemiş.'}
                       </TableCell>
                     </TableRow>
@@ -239,6 +268,19 @@ export const SuppliersManagementPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           {new Date(supplier.created_at).toLocaleDateString('tr-TR')}
+                        </TableCell>
+                        <TableCell>
+                          {supplier.last_login ? (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {new Date(supplier.last_login).toLocaleString('tr-TR', { 
+                                dateStyle: 'short', 
+                                timeStyle: 'short' 
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">

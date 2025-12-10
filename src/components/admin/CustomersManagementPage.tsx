@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Plus, Search, Users, Phone, Mail } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Users, Phone, Mail, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { AddEditCustomerForm } from './AddEditCustomerForm';
@@ -20,8 +20,10 @@ interface Customer {
   tax_office?: string;
   tax_number?: string;
   company_representative?: string;
+  user_id?: string;
   created_at: string;
   updated_at: string;
+  last_login?: string;
 }
 
 export const CustomersManagementPage: React.FC = () => {
@@ -34,13 +36,39 @@ export const CustomersManagementPage: React.FC = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: customersData, error } = await supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCustomers(data || []);
+
+      // Fetch last login times for customers with user_id
+      const userIds = customersData?.filter(c => c.user_id).map(c => c.user_id) || [];
+      
+      let sessionsMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: sessionsData } = await supabase
+          .from('user_sessions')
+          .select('user_id, last_seen_at')
+          .in('user_id', userIds)
+          .order('last_seen_at', { ascending: false });
+        
+        if (sessionsData) {
+          sessionsData.forEach(session => {
+            if (!sessionsMap[session.user_id]) {
+              sessionsMap[session.user_id] = session.last_seen_at;
+            }
+          });
+        }
+      }
+
+      const customersWithLogin = customersData?.map(customer => ({
+        ...customer,
+        last_login: customer.user_id ? sessionsMap[customer.user_id] : undefined
+      })) || [];
+
+      setCustomers(customersWithLogin);
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast({
@@ -200,13 +228,14 @@ export const CustomersManagementPage: React.FC = () => {
                     <TableHead>E-posta</TableHead>
                     <TableHead>Adres</TableHead>
                     <TableHead>Kayıt Tarihi</TableHead>
+                    <TableHead>Son Giriş</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
+                      <TableCell colSpan={8} className="text-center py-8">
                         {searchTerm ? 'Arama kriterlerine uygun müşteri bulunamadı.' : 'Henüz müşteri eklenmemiş.'}
                       </TableCell>
                     </TableRow>
@@ -242,6 +271,19 @@ export const CustomersManagementPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           {new Date(customer.created_at).toLocaleDateString('tr-TR')}
+                        </TableCell>
+                        <TableCell>
+                          {customer.last_login ? (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {new Date(customer.last_login).toLocaleString('tr-TR', { 
+                                dateStyle: 'short', 
+                                timeStyle: 'short' 
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
