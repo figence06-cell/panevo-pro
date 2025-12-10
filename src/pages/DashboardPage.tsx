@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Package, ShoppingCart, Users, TrendingUp, Star } from 'lucide-react';
+import { Building2, Package, ShoppingCart, Users, TrendingUp, Star, LogIn, UserPlus, Edit, Trash2, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,10 +14,20 @@ interface DashboardStats {
   stat4: string;
 }
 
+interface ActivityLog {
+  id: string;
+  action: string;
+  details: unknown;
+  created_at: string;
+  user_id: string;
+}
+
 const DashboardPage: React.FC = () => {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   const getWelcomeMessage = () => {
     switch (profile?.role) {
@@ -161,6 +171,151 @@ const DashboardPage: React.FC = () => {
     fetchStats();
   }, [profile]);
 
+  // Fetch recent activities
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!profile) return;
+
+      try {
+        setActivitiesLoading(true);
+
+        if (profile.role === 'admin') {
+          // Admin sees all activities
+          const { data, error } = await supabase
+            .from('activity_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (error) throw error;
+          setActivities(data || []);
+        } else {
+          // Other users see only their own activities
+          const { data, error } = await supabase
+            .from('activity_logs')
+            .select('*')
+            .eq('user_id', profile.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (error) throw error;
+          setActivities(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, [profile]);
+
+  const getActivityIcon = (action: string) => {
+    switch (action) {
+      case 'login':
+        return { icon: LogIn, color: 'bg-primary/10', textColor: 'text-primary' };
+      case 'signup':
+      case 'user_created':
+        return { icon: UserPlus, color: 'bg-accent/10', textColor: 'text-accent' };
+      case 'product_added':
+      case 'product_created':
+        return { icon: Package, color: 'bg-primary/10', textColor: 'text-primary' };
+      case 'product_updated':
+        return { icon: Edit, color: 'bg-warning/10', textColor: 'text-warning' };
+      case 'product_deleted':
+        return { icon: Trash2, color: 'bg-destructive/10', textColor: 'text-destructive' };
+      case 'order_created':
+        return { icon: ShoppingCart, color: 'bg-accent/10', textColor: 'text-accent' };
+      case 'order_completed':
+        return { icon: CheckCircle, color: 'bg-green-500/10', textColor: 'text-green-500' };
+      case 'customer_added':
+        return { icon: Users, color: 'bg-warning/10', textColor: 'text-warning' };
+      case 'supplier_added':
+        return { icon: Building2, color: 'bg-primary/10', textColor: 'text-primary' };
+      default:
+        return { icon: Package, color: 'bg-muted/10', textColor: 'text-muted-foreground' };
+    }
+  };
+
+  const getActivityText = (action: string, details: unknown) => {
+    const detailsObj = details as Record<string, unknown> | null;
+    const name = detailsObj?.name || detailsObj?.product_name || detailsObj?.customer_name || detailsObj?.supplier_name || '';
+    
+    switch (action) {
+      case 'login':
+        return 'Sisteme giriş yapıldı';
+      case 'signup':
+      case 'user_created':
+        return 'Yeni kullanıcı kaydı oluşturuldu';
+      case 'product_added':
+      case 'product_created':
+        return name ? `"${name}" ürünü eklendi` : 'Yeni ürün eklendi';
+      case 'product_updated':
+        return name ? `"${name}" ürünü güncellendi` : 'Ürün güncellendi';
+      case 'product_deleted':
+        return name ? `"${name}" ürünü silindi` : 'Ürün silindi';
+      case 'order_created':
+        return 'Yeni sipariş oluşturuldu';
+      case 'order_completed':
+        return 'Sipariş tamamlandı';
+      case 'customer_added':
+        return name ? `"${name}" müşterisi eklendi` : 'Yeni müşteri eklendi';
+      case 'supplier_added':
+        return name ? `"${name}" tedarikçisi eklendi` : 'Yeni tedarikçi eklendi';
+      default:
+        return action.replace(/_/g, ' ');
+    }
+  };
+
+  const getActivityBadge = (action: string) => {
+    switch (action) {
+      case 'login':
+        return 'Giriş';
+      case 'signup':
+      case 'user_created':
+        return 'Kayıt';
+      case 'product_added':
+      case 'product_created':
+        return 'Yeni';
+      case 'product_updated':
+        return 'Güncelleme';
+      case 'product_deleted':
+        return 'Silindi';
+      case 'order_created':
+        return 'Sipariş';
+      case 'order_completed':
+        return 'Tamamlandı';
+      case 'customer_added':
+        return 'Müşteri';
+      case 'supplier_added':
+        return 'Tedarikçi';
+      default:
+        return 'İşlem';
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return 'Az önce';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} dakika önce`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} saat önce`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} gün önce`;
+    } else {
+      return date.toLocaleDateString('tr-TR');
+    }
+  };
+
   const getQuickStats = () => {
     if (!stats) return [];
 
@@ -261,49 +416,47 @@ const DashboardPage: React.FC = () => {
         <CardHeader>
           <CardTitle>Son Aktiviteler</CardTitle>
           <CardDescription>
-            Platform üzerindeki son hareketleriniz
+            {profile?.role === 'admin' ? 'Platform üzerindeki son hareketler' : 'Platform üzerindeki son hareketleriniz'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 rounded-lg border border-border/50">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Package className="h-5 w-5 text-primary" />
+            {activitiesLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-border/50">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                ))}
+              </>
+            ) : activities.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Henüz aktivite bulunmuyor
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  Yeni ürün eklendi
-                </p>
-                <p className="text-xs text-muted-foreground">2 saat önce</p>
-              </div>
-              <Badge variant="secondary">Yeni</Badge>
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 rounded-lg border border-border/50">
-              <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
-                <ShoppingCart className="h-5 w-5 text-accent" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  Sipariş onaylandı
-                </p>
-                <p className="text-xs text-muted-foreground">5 saat önce</p>
-              </div>
-              <Badge variant="secondary">Tamamlandı</Badge>
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 rounded-lg border border-border/50">
-              <div className="h-10 w-10 rounded-full bg-warning/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-warning" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  Yeni müşteri kaydı
-                </p>
-                <p className="text-xs text-muted-foreground">1 gün önce</p>
-              </div>
-              <Badge variant="secondary">Müşteri</Badge>
-            </div>
+            ) : (
+              activities.map((activity) => {
+                const { icon: Icon, color, textColor } = getActivityIcon(activity.action);
+                return (
+                  <div key={activity.id} className="flex items-center gap-4 p-4 rounded-lg border border-border/50">
+                    <div className={`h-10 w-10 rounded-full ${color} flex items-center justify-center`}>
+                      <Icon className={`h-5 w-5 ${textColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {getActivityText(activity.action, activity.details)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatTimeAgo(activity.created_at)}</p>
+                    </div>
+                    <Badge variant="secondary">{getActivityBadge(activity.action)}</Badge>
+                  </div>
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>
