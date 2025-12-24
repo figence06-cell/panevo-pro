@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { MaintenanceModeCard } from '@/components/admin/MaintenanceModeCard';
 
 interface DashboardStats {
   stat1: string;
@@ -350,6 +351,9 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Maintenance Mode Card - Admin Only */}
+      {profile?.role === 'admin' && <MaintenanceModeCard />}
+      
       {/* Welcome Section */}
       <div className="gradient-card rounded-2xl p-8 border border-border/50">
         <div className="flex items-center gap-4 mb-4">
